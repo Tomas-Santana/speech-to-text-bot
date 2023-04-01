@@ -1,0 +1,12 @@
+# audio files
+*.wav
+*.ogg
+
+# python config files
+__pycache__
+__init__.py
+
+# environment variables
+.env
+
+
