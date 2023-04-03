@@ -22,14 +22,18 @@ responses = {
         "processing": "La transcripcion esta en proceso",
         "too_long": "El archivo es demasiado largo\. La duracion maxima es de 20 segundos",
         "error": "Ha ocurrido un error\. Por favor, intenta de nuevo mas tarde",
-        "lang_change": "El idioma ha sido cambiado a Español"
+        "lang_change": "El idioma ha sido cambiado a Español",
+        "lang_change_prompt": "Escribe el idioma al que quieres cambiar.\n\nIdiomas disponibles:\n\n/lang *English* - En-US\n/lang *Español* - Es-ES",
+        "lang_change_error": "El idioma que ingresó no esta disponible"
     },
     "En-US": {
         "start": "**Voice to text**\n\nSend a voice message to be transcribed to text\.\n\nCurrently, files must have a maximum duration of 20 seconds\.\n\nIf you want to change the language, use the /lang command",
-        "processing": "The transcription is in process",
+        "processing": "Transcription is in progress",
         "too_long": "The file is too long\. The maximum duration is 20 seconds",
         "error": "An error has occurred\. Please try again later",
-        "lang_change": "The language has been changed to English"
+        "lang_change": "The language has been changed to English",
+        "lang_change_prompt": "Write the language you want to change to\.\n\nAvailable languages:\n\n/lang *English* - En-US\n/lang *Español* - Es-ES",
+        "lang_change_error": "The language you entered is not available"
     }
 }
 
@@ -55,9 +59,18 @@ async def get_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     os.remove('converted.wav')
 
 async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global lang
+    if len(context.args) == 0:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['lang_change_prompt'])
+        return
     language = " ".join(context.args)
+    if language == "English":
+        lang = "En-US"
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['lang_change'])
+    elif language == "Español":
+        lang = "Es-ES"
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['lang_change'])
 
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="lang: " + language)
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(API_KEY).build()
