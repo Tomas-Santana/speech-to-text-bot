@@ -1,5 +1,5 @@
 import logging
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 import json
 import converter
@@ -80,9 +80,15 @@ async def get_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def user_set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global lang
+    set_lang_keyboard =['/lang EN', '/lang ES', '/lang RU', '/lang IT']
+
     if len(context.args) == 0:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['lang_change_prompt'], parse_mode='MarkdownV2')
+        await update.message.reply_text( 
+            responses[lang]['lang_change_prompt'], 
+            reply_markup=ReplyKeyboardMarkup([set_lang_keyboard], one_time_keyboard=True, resize_keyboard=True)
+            )
         return
+    
     language = " ".join(context.args)
     if language == "EN":
         lang = "En-US"
@@ -96,6 +102,8 @@ async def user_set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['lang_change_error'])
         return
     await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['lang_change'])
+
+
 
 
 def set_language(language):
