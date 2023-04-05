@@ -9,4 +9,7 @@ __init__.py
 # environment variables
 .env
 
+# vscode config
+.vscode
+
 
