@@ -1,12 +1,13 @@
-# helloooooo
-
 import logging
+import asyncio
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 import json
 import converter
 import os
 from dotenv import load_dotenv
+
+FFMPEG_STATIC = "dependencies/ffmpeg"
 
 load_dotenv()
 API_KEY = os.environ['API_KEY']
@@ -15,6 +16,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+
+application = ApplicationBuilder().token(API_KEY).build()
+
 
 lang = "Es-ES"
 
@@ -68,17 +72,17 @@ async def get_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['too_long'])
         return
     new_file = await update.message.effective_attachment.get_file()
-    await new_file.download_to_drive('audio.ogg')
+    await new_file.download_to_drive('tmp/audio.ogg')
     await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['processing'])
     
 
-    converter.ogg_to_wav('audio.ogg')
-    text = converter.get_text_from_voice('converted.wav', language=lang)
+    converter.ogg_to_wav('tmp/audio.ogg')
+    text = converter.get_text_from_voice('tmp/converted.wav', language=lang)
 
     await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Transcripcion:\n\n{text}")
 
-    os.remove('audio.ogg')
-    os.remove('converted.wav')
+    os.remove('tmp/audio.ogg')
+    os.remove('tmp/converted.wav')
 
 async def user_set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global lang
@@ -105,9 +109,6 @@ async def user_set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['lang_change'])
 
-
-
-
 def set_language(language):
     global lang
     if language == "en":
@@ -121,9 +122,11 @@ def set_language(language):
     else:
         lang = "En-US"
 
-if __name__ == '__main__':
-    application = ApplicationBuilder().token(API_KEY).build()
-    
+def lambda_handler(event, context):
+     return asyncio.get_event_loop().run_until_complete(main(event, context))
+
+
+async def main(event, context):
     start_handler = CommandHandler('start', start)
     application.add_handler(start_handler)
 
@@ -133,4 +136,17 @@ if __name__ == '__main__':
     language_handler = CommandHandler('lang', user_set_language)
     application.add_handler(language_handler)
 
-    application.run_polling()
+    try:
+        await application.initialize()
+        await application.process_update(
+            Update.de_json(json.loads(event["body"]), application.bot)
+        )
+        return {
+            'statusCode': 200,
+            'body': "Success"
+        }
+    except Exception as exec:
+        return {
+            'statusCode': 500,
+            'body': json.dumps(str(exec))
+        }
