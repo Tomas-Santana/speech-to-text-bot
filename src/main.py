@@ -66,17 +66,17 @@ async def get_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['too_long'])
         return
     new_file = await update.message.effective_attachment.get_file()
-    await new_file.download_to_drive('audio.ogg')
+    await new_file.download_to_drive('tmp\\audio.ogg')
     await context.bot.send_message(chat_id=update.effective_chat.id, text=responses[lang]['processing'])
     
 
-    converter.ogg_to_wav('audio.ogg')
-    text = converter.get_text_from_voice('converted.wav', language=lang)
+    converter.ogg_to_wav('tmp\\audio.ogg')
+    text = converter.get_text_from_voice('tmp\\converted.wav', language=lang)
 
     await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Transcripcion:\n\n{text}")
 
-    os.remove('audio.ogg')
-    os.remove('converted.wav')
+    os.remove('tmp\\audio.ogg')
+    os.remove('tmp\\converted.wav')
 
 async def user_set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global lang

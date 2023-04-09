@@ -4,7 +4,7 @@ import speech_recognition as sr
 
 def ogg_to_wav(file_path):
     v_message = AudioSegment.from_ogg(file_path)
-    v_message.export(f"converted.wav", format="wav")
+    v_message.export(f"tmp/converted.wav", format="wav")
     return
 
 def get_text_from_voice(file_path, language="es-ES"):
